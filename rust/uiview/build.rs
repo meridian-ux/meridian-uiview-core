@@ -2,14 +2,11 @@ use std::env;
 use std::path::PathBuf;
 
 // Builds Rust types for meridian.ui.v1 from the proto source in
-// ../../proto/uiview.proto. The generated module lives at
-// OUT_DIR/meridian.ui.v1.rs and is included via src/proto.rs.
+// ../../proto/uiview.proto.
 //
-// `field_behavior.proto` is imported by uiview.proto for the
-// REQUIRED / OPTIONAL annotations; prost-build needs the
-// googleapis dep on its include path. We rely on a vendored
-// copy under proto_third_party/ so the build doesn't need
-// network access.
+// Generated types derive `serde::Serialize` + `serde::Deserialize` so
+// JSON-shaped descriptor objects from the TS / wasm boundary
+// round-trip into typed prost messages without a manual encoder.
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let workspace = manifest_dir.parent().unwrap();
@@ -27,7 +24,18 @@ fn main() {
             .display()
     );
 
-    prost_build::Config::new()
+    let mut config = prost_build::Config::new();
+    // Add serde derives to every generated type so TS hosts can
+    // pass JSON-shaped descriptors / requests / responses across
+    // the wasm boundary and have them deserialize to typed prost
+    // messages.
+    config.type_attribute(
+        ".",
+        "#[derive(::serde::Serialize, ::serde::Deserialize)]",
+    );
+    // Skip the field-behavior extension on FieldOptions; serde
+    // doesn't need to round-trip the descriptor proto itself.
+    config
         .compile_protos(
             &[proto.to_str().unwrap()],
             &[
