@@ -1,0 +1,82 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_test")
+load("@rules_rust_prost//:defs.bzl", "rust_prost_library")
+load("@rules_rust_wasm_bindgen//:defs.bzl", "rust_wasm_bindgen")
+
+package(default_visibility = ["//visibility:public"])
+
+# Cargo.toml exposed for crate_universe to read manifests.
+exports_files(["Cargo.toml"])
+
+# Rust types generated from //proto:uiview_proto via prost. Consumes
+# the Bazel proto graph, so @googleapis provides field_behavior
+# natively — no vendored copies needed.
+rust_prost_library(
+    name = "uiview_proto",
+    proto = "//proto:uiview_proto",
+)
+
+rust_library(
+    name = "uiview",
+    srcs = [
+        "src/lib.rs",
+        "src/paths.rs",
+        "src/render.rs",
+        "src/request.rs",
+    ],
+    crate_name = "meridian_uiview",
+    edition = "2021",
+    deps = [
+        ":uiview_proto",
+        "@crates//:prost",
+        "@crates//:prost-types",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:thiserror",
+    ],
+)
+
+rust_test(
+    name = "uiview_test",
+    crate = ":uiview",
+    edition = "2021",
+)
+
+# Wasm cdylib variant — same sources as `:uiview` but with the `wasm`
+# crate-feature flag set, which #[cfg]-gates in the wasm_api module
+# and its wasm-bindgen wrappers. Built for wasm32-unknown-unknown via
+# the transition in rust_wasm_bindgen.
+rust_shared_library(
+    name = "uiview_wasm_lib",
+    srcs = [
+        "src/lib.rs",
+        "src/paths.rs",
+        "src/render.rs",
+        "src/request.rs",
+        "src/wasm_api.rs",
+    ],
+    crate_name = "meridian_uiview",
+    edition = "2021",
+    deps = [
+        ":uiview_proto",
+        "@crates//:js-sys",
+        "@crates//:prost",
+        "@crates//:prost-types",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:serde-wasm-bindgen",
+        "@crates//:thiserror",
+        "@crates//:wasm-bindgen",
+    ],
+)
+
+# wasm-bindgen-processed artifact. Emits:
+#   bazel-bin/rust/uiview/uiview_wasm/uiview_wasm.js
+#   bazel-bin/rust/uiview/uiview_wasm/uiview_wasm_bg.wasm
+#   bazel-bin/rust/uiview/uiview_wasm/uiview_wasm.d.ts (TS bindings)
+# `target_output = "web"` matches the host pattern wasm-pack used.
+rust_wasm_bindgen(
+    name = "uiview_wasm",
+    out_name = "meridian_uiview",
+    target = "web",
+    wasm_file = ":uiview_wasm_lib",
+)

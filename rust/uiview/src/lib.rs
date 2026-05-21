@@ -21,11 +21,13 @@
 // All types here are platform-neutral: no JavaFX, no DOM, no terminal
 // dependencies. Renderers layer those on top.
 
+/// prost-generated types for meridian.ui.v1. The Bazel target
+/// `//rust/uiview:uiview_proto_rust` runs rules_rust_prost against
+/// `//proto:uiview_proto` and ships the result as a sibling crate;
+/// we re-export its `meridian.ui.v1` module here so consumers can
+/// import via `meridian_uiview::proto::PanelDescriptor`.
 pub mod proto {
-    // prost-generated types from proto/uiview.proto. Build script
-    // (build.rs) runs protoc and writes the module to
-    // OUT_DIR/meridian.ui.v1.rs.
-    include!(concat!(env!("OUT_DIR"), "/meridian.ui.v1.rs"));
+    pub use uiview_proto::meridian::ui::v1::*;
 }
 
 mod paths;
@@ -36,5 +38,5 @@ pub use paths::ProtoPaths;
 pub use render::{format_cell, format_value, render_table, RenderedRow};
 pub use request::{Context, RequestBuilder};
 
-#[cfg(feature = "wasm")]
+#[cfg(target_arch = "wasm32")]
 mod wasm_api;

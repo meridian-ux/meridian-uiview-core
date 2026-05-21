@@ -1,28 +1,29 @@
-# Cargo workspace for Meridian's Rust UI surface.
+# Cargo workspace for Meridian's Rust UI surface. The authoritative
+# build is Bazel — this Cargo.toml exists so crate_universe can read
+# manifests and so rust-analyzer / standalone cargo invocations still
+# work for local iteration.
 #
 # Layout:
 #   uiview/         — platform-neutral core. Prost-generated proto
 #                     types for meridian.ui.v1, ProtoPaths field
 #                     accessor, RequestBuilder, scoring helpers.
-#                     Optional `wasm` feature exposes wasm-bindgen
-#                     wrappers consumed by the TS web renderer.
+#                     wasm-bindgen wrappers (consumed by the TS web
+#                     renderer) are gated on
+#                     `#[cfg(target_arch = "wasm32")]`.
 #   tui/            — ratatui-based renderer. Consumes `uiview` as a
 #                     pure Rust dep; no wasm boundary.
 #   tui-demo/       — example binary mounting a hardcoded
 #                     PanelDescriptor with mocked data. Shows the
 #                     framework rendering end-to-end in a terminal.
 #
-# Build:
-#   cargo build              — native build of every crate.
-#   cargo run -p meridian-tui-demo
-#                            — launch the TUI demo.
-#   wasm-pack build uiview --features wasm
-#                            — produce the wasm bundle the TS
-#                              renderer imports (Stage 2).
+# Build (Bazel — hermetic):
+#   bazel build //rust/...
+#   bazel test  //rust/...
+#   bazel run   //rust/tui-demo:tui-demo
+#   bazel build //rust/uiview:uiview_wasm     # wasm bundle for web
 #
-# Bazel integration is deferred — until rules_rust + rules_wasm are
-# wired into MODULE.bazel, the Rust tree is plain cargo. Consumers
-# that need Bazel can hoist later.
+# Repin the crate-universe lockfile after touching this file:
+#   CARGO_BAZEL_REPIN=1 bazel build //rust/...
 [workspace]
 resolver = "2"
 members = [
@@ -46,8 +47,10 @@ crossterm = "0.28"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-# wasm-bindgen + js-sys + serde-wasm-bindgen are pulled in only when
-# the uiview crate's `wasm` feature is enabled.
-wasm-bindgen = "0.2"
+# wasm-bindgen + js-sys + serde-wasm-bindgen. The wasm-bindgen
+# version must match the wasm-bindgen-cli baked into
+# rules_rust_wasm_bindgen's default toolchain (0.2.105) — otherwise
+# the IR schema versions diverge and post-processing fails.
+wasm-bindgen = "=0.2.105"
 js-sys = "0.3"
 serde-wasm-bindgen = "0.6"

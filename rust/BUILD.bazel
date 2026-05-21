@@ -1,0 +1,45 @@
+load("@rules_rust//rust:defs.bzl", "rust_library_group")
+load("@rules_rust_prost//:defs.bzl", "rust_prost_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+# Cargo.toml + Cargo.lock are exposed as targets so crate_universe
+# can read them as the dep manifest. crate_universe is configured in
+# MODULE.bazel under the `crate` extension.
+exports_files([
+    "Cargo.toml",
+    "Cargo.lock",
+])
+
+# Tonic-free prost toolchain.
+#
+# Why: the default toolchain shipped by rules_rust_prost wires
+# `tonic_runtime` into every rust_prost_library target, which drags
+# tokio + mio + socket2 into the dep graph. Those crates don't
+# compile for `wasm32-unknown-unknown`, so the wasm-bindgen transition
+# applied by //rust/uiview:uiview_wasm fails. uiview only needs proto
+# types — gRPC clients live in the TUI/native crates and pull tonic
+# directly. By registering this toolchain in the root MODULE.bazel it
+# wins toolchain resolution over the dep-shipped default.
+rust_library_group(
+    name = "prost_runtime",
+    deps = ["@crates//:prost"],
+)
+
+rust_prost_toolchain(
+    name = "prost_toolchain_impl",
+    prost_plugin = "@rules_rust_prost//private/3rdparty/crates:protoc-gen-prost__protoc-gen-prost",
+    prost_plugin_flag = "--plugin=protoc-gen-prost=%s",
+    prost_runtime = ":prost_runtime",
+    prost_types = "@crates//:prost-types",
+    # tonic_plugin_flag has a non-empty default; explicitly clear it so
+    # the toolchain's "all-or-nothing tonic attrs" check sees zero tonic
+    # attrs set and stays happy.
+    tonic_plugin_flag = "",
+)
+
+toolchain(
+    name = "prost_toolchain",
+    toolchain = ":prost_toolchain_impl",
+    toolchain_type = "@rules_rust_prost//:toolchain_type",
+)
