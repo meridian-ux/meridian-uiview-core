@@ -1,0 +1,28 @@
+[package]
+name = "meridian-uiview"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Platform-neutral core for Meridian's proto-driven UI: PanelDescriptor types + field-path accessor + request builder + scoring helpers."
+
+[features]
+default = []
+# Exposes wasm-bindgen wrappers for the TS web renderer.
+# Compile with `cargo build --features wasm` or `wasm-pack build`.
+wasm = ["wasm-bindgen", "js-sys", "serde-wasm-bindgen"]
+
+[dependencies]
+prost = { workspace = true }
+prost-types = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+wasm-bindgen = { workspace = true, optional = true }
+js-sys = { workspace = true, optional = true }
+serde-wasm-bindgen = { workspace = true, optional = true }
+
+[build-dependencies]
+prost-build = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
