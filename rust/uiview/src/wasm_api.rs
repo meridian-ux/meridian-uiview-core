@@ -13,7 +13,7 @@
 // request outputs also flow as JSON.
 
 use crate::paths::ProtoPaths;
-use crate::proto::PanelDescriptor;
+use crate::proto::{PanelDescriptor, RpcCall, TablePanel};
 use crate::render::render_table;
 use crate::request::{Context, RequestBuilder};
 use serde_json::Value;
@@ -118,4 +118,90 @@ struct ContextJs {
     selected_row: Option<Value>,
     #[serde(rename = "formValues")]
     form_values: Option<HashMap<String, Value>>,
+}
+
+impl ContextJs {
+    fn into_context(self) -> Context {
+        Context {
+            current_resource_path: self.current_resource_path,
+            ui_identity: self.ui_identity,
+            selected_row: self.selected_row,
+            form_values: self.form_values.unwrap_or_default(),
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Generic primitives used by LRO + future panel shapes. The
+// descriptor-specific helpers above are thin wrappers on top of these;
+// hosts orchestrating multi-step flows (LRO start → poll → finalize)
+// reach for these directly.
+// ----------------------------------------------------------------------------
+
+/// Builds the JSON request for any RpcCall, given a runtime context.
+/// Same machinery TablePanel's `populate` uses, exposed standalone so
+/// hosts can drive LroPanel.start, LroPanel.finalize, and RowAction
+/// RPCs without each shape needing its own wasm-bindgen wrapper.
+#[wasm_bindgen(js_name = "buildRequest")]
+pub fn build_request_wasm(
+    rpc_call: JsValue,
+    context_value: JsValue,
+) -> Result<JsValue, JsError> {
+    let call: RpcCall =
+        serde_wasm_bindgen::from_value(rpc_call).map_err(|e| JsError::new(&e.to_string()))?;
+    let ctx_in: ContextJs = serde_wasm_bindgen::from_value(context_value)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let request = RequestBuilder::build(&call, &ctx_in.into_context());
+    serde_wasm_bindgen::to_value(&request).map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Renders any TablePanel against any JSON response value. The
+/// existing `renderTable` works on a full PanelDescriptor (extracting
+/// `descriptor.body.table` internally); this variant takes a
+/// `TablePanel` directly so callers can render LroPanel.result with
+/// the same code path.
+#[wasm_bindgen(js_name = "renderTablePanel")]
+pub fn render_table_panel_wasm(
+    table_panel: JsValue,
+    response: JsValue,
+) -> Result<JsValue, JsError> {
+    let table: TablePanel = serde_wasm_bindgen::from_value(table_panel)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let response_json: Value = serde_wasm_bindgen::from_value(response)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let rows = render_table(&response_json, &table);
+    let serializable: Vec<RenderedRowJs> = rows
+        .into_iter()
+        .map(|r| RenderedRowJs {
+            raw: r.raw,
+            cells: r.cells,
+        })
+        .collect();
+    serde_wasm_bindgen::to_value(&serializable).map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Convention-based LRO metadata formatter. Mirrors JavaFX's
+/// `DescribedLroCard.renderMetadata`: extracts `state` (rendered as
+/// `[STATE_NAME]`) and `status_message`, returning the concatenation.
+/// Falls back to the raw JSON if neither field is present. Hosts
+/// display this on a status line while polling WaitOperation.
+#[wasm_bindgen(js_name = "formatLroMetadata")]
+pub fn format_lro_metadata(metadata: JsValue) -> Result<String, JsError> {
+    let value: Value =
+        serde_wasm_bindgen::from_value(metadata).map_err(|e| JsError::new(&e.to_string()))?;
+    let mut out = String::new();
+    let state = ProtoPaths::get(&value, "state");
+    if let Value::String(s) = state {
+        out.push('[');
+        out.push_str(s);
+        out.push_str("] ");
+    }
+    let status = ProtoPaths::get(&value, "status_message");
+    if let Value::String(s) = status {
+        out.push_str(s);
+    }
+    if out.is_empty() {
+        out = value.to_string();
+    }
+    Ok(out)
 }
