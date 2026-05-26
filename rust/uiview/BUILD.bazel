@@ -25,6 +25,11 @@ rust_library(
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
+    # `bazel_proto` cfg-gates src/lib.rs to pull prost types from
+    # the sibling `:uiview_proto` crate instead of OUT_DIR (the
+    # cargo path). Without this, the build.rs path is selected
+    # and OUT_DIR isn't set under bazel.
+    crate_features = ["bazel_proto"],
     deps = [
         ":uiview_proto",
         "@crates//:prost",
@@ -56,6 +61,7 @@ rust_shared_library(
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
+    crate_features = ["bazel_proto"],
     deps = [
         ":uiview_proto",
         "@crates//:js-sys",
