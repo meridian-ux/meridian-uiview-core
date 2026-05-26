@@ -13,9 +13,10 @@
 // request outputs also flow as JSON.
 
 use crate::paths::ProtoPaths;
-use crate::proto::{PanelDescriptor, RpcCall, TablePanel};
+use crate::proto::{PanelBundle, PanelDescriptor, RpcCall, TablePanel};
 use crate::render::render_table;
 use crate::request::{Context, RequestBuilder};
+use prost::Message;
 use serde_json::Value;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
@@ -204,4 +205,18 @@ pub fn format_lro_metadata(metadata: JsValue) -> Result<String, JsError> {
         out = value.to_string();
     }
     Ok(out)
+}
+
+/// Decode a wire-encoded `meridian.ui.v1.PanelBundle` (the output of
+/// `meridian_panel_bundle`) into a JS-shaped object. Callers pass the
+/// raw bytes (e.g. fetched from `/api/panels.binpb`); the returned
+/// object has the proto3-JSON snake_case shape every other wasm_api
+/// function consumes, so its `.panels` entries can be passed straight
+/// into `renderTablePanel`. This removes the need for a separate JS
+/// proto-decoder library (protobuf-es, etc.).
+#[wasm_bindgen(js_name = "decodePanelBundle")]
+pub fn decode_panel_bundle(bytes: &[u8]) -> Result<JsValue, JsError> {
+    let bundle =
+        PanelBundle::decode(bytes).map_err(|e| JsError::new(&e.to_string()))?;
+    serde_wasm_bindgen::to_value(&bundle).map_err(|e| JsError::new(&e.to_string()))
 }
