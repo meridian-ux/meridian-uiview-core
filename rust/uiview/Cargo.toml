@@ -22,5 +22,17 @@ wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
 
+[build-dependencies]
+# Used by build.rs to compile meridian.ui.v1 from `proto/uiview.proto`
+# for cargo consumers. Bazel consumers opt into `bazel_proto`
+# (uiview_proto sibling crate) instead.
+prost-build = { workspace = true }
+
+[features]
+# When set, the Bazel-generated `uiview_proto` sibling crate is used
+# instead of cargo's build.rs codegen. Bazel targets enable this
+# in their `rustc_flags = ["--cfg=feature=\"bazel_proto\""]`.
+bazel_proto = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]

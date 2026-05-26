@@ -21,13 +21,25 @@
 // All types here are platform-neutral: no JavaFX, no DOM, no terminal
 // dependencies. Renderers layer those on top.
 
-/// prost-generated types for meridian.ui.v1. The Bazel target
-/// `//rust/uiview:uiview_proto_rust` runs rules_rust_prost against
-/// `//proto:uiview_proto` and ships the result as a sibling crate;
-/// we re-export its `meridian.ui.v1` module here so consumers can
-/// import via `meridian_uiview::proto::PanelDescriptor`.
+/// prost-generated types for meridian.ui.v1.
+///
+/// Two compilation paths, same emitted module:
+///   * **Bazel** — `//rust/uiview:uiview_proto_rust` (rules_rust_prost)
+///     ships the codegen as a sibling crate `uiview_proto`, which
+///     this re-exports via the `bazel_proto` cargo feature.
+///   * **cargo (default)** — `build.rs` runs `prost_build` over
+///     `../../proto/uiview.proto` and emits `meridian.ui.v1.rs`
+///     into OUT_DIR; the `include!` below pulls it in.
+///
+/// The `cargo` path lets consumers (e.g. fastverk/botnoc) depend
+/// on meridian-uiview via a `path = "..."` dep without needing the
+/// full Bazel build of meridian.
 pub mod proto {
+    #[cfg(feature = "bazel_proto")]
     pub use uiview_proto::meridian::ui::v1::*;
+
+    #[cfg(not(feature = "bazel_proto"))]
+    include!(concat!(env!("OUT_DIR"), "/meridian.ui.v1.rs"));
 }
 
 mod paths;
