@@ -50,5 +50,12 @@ pub use paths::ProtoPaths;
 pub use render::{format_cell, format_value, render_table, RenderedRow};
 pub use request::{Context, RequestBuilder};
 
+// Re-export the prost crate so downstream consumers can decode our
+// generated message types (e.g. `PanelBundle`) without introducing a
+// second prost instance from their own crate universe. Bazel's
+// isolated `@crates::prost` would otherwise produce trait-distinct
+// `Message` impls and `PanelBundle::decode` would not resolve.
+pub use prost;
+
 #[cfg(target_arch = "wasm32")]
 mod wasm_api;
