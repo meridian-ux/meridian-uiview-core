@@ -353,6 +353,7 @@ dependencies = [
  "meridian-uiview",
  "prost",
  "ratatui",
+ "regex",
  "serde_json",
  "thiserror",
 ]
