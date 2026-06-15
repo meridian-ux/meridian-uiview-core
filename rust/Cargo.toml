@@ -30,6 +30,7 @@ members = [
     "uiview",
     "tui",
     "tui-demo",
+    "egui-demo",
 ]
 
 [workspace.package]
@@ -44,6 +45,10 @@ prost-build = "0.13"
 prost-types = "0.13"
 ratatui = "0.29"
 crossterm = "0.28"
+# egui-demo: a native (egui) renderer foil reusing the uiview core (see
+# rust/egui-demo). Mirrors tui-demo but with an immediate-mode GUI window.
+egui = "0.28"
+eframe = "0.28"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
