@@ -15,6 +15,15 @@ rust_prost_library(
     proto = "//proto:uiview_proto",
 )
 
+# Rust types for meridian.theme.v1 via prost. A SEPARATE prost crate from
+# uiview_proto (semantics ⊥ style), consumed by the TUI's theme binding
+# (//rust/tui:theme -> ratatui Style palette). No serde transform: the TUI
+# decodes a Theme binpb, it doesn't round-trip JSON across a wasm boundary.
+rust_prost_library(
+    name = "theme_proto",
+    proto = "//proto:theme_proto",
+)
+
 rust_library(
     name = "uiview",
     srcs = [

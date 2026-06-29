@@ -2123,6 +2123,7 @@ dependencies = [
  "crossterm",
  "meridian-uiview",
  "prost",
+ "prost-build",
  "ratatui",
  "regex",
  "serde_json",
