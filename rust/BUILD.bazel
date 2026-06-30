@@ -11,6 +11,19 @@ exports_files([
     "Cargo.lock",
 ])
 
+# Re-export serde_json so cross-repo rust consumers (the native renderers, e.g.
+# meridian-tui, and the botnoc cli/tui binary) link the SAME serde_json crate
+# instance this core was built against. `serde_json::Value` crosses the core's
+# public API (render_table / RenderedRow / RequestBuilder context), and Bazel
+# modules each get their own crate_universe — two `@crates//:serde_json` from
+# different modules are DISTINCT types even at the same version. Depending on this
+# alias instead of one's own serde_json keeps the boundary type unified.
+alias(
+    name = "serde_json",
+    actual = "@crates//:serde_json",
+    visibility = ["//visibility:public"],
+)
+
 # Tonic-free prost toolchain.
 #
 # Why: the default toolchain shipped by rules_rust_prost wires
