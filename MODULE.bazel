@@ -1,6 +1,6 @@
 module(
     name = "meridian_uiview_core",
-    version = "0.1.1",
+    version = "0.1.2",
 )
 
 # meridian-uiview-core — the shared, platform-neutral Rust core of the meridian
@@ -38,7 +38,18 @@ use_repo(rust, "rust_toolchains")
 register_toolchains("@rust_toolchains//:all")
 
 # crate_universe reads rust/Cargo.toml + Cargo.lock.
-crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+# isolate=True so this universe (named `crates`) doesn't clash when a consumer's
+# graph contains ANOTHER non-isolated `crates` — notably botnoc, which transitionally
+# keeps the old `meridian` monolith (non-isolated `crates`) for its web wasm while it
+# adopts this module for cli/tui. crate_universe rejects two same-named non-isolated
+# universes; isolating here lets the two coexist. Consumers reference this module's
+# TARGETS (//rust/uiview, :theme_proto, //rust:serde_json) by label, so isolation is
+# transparent to them.
+crate = use_extension(
+    "@rules_rust//crate_universe:extensions.bzl",
+    "crate",
+    isolate = True,
+)
 crate.from_cargo(
     name = "crates",
     cargo_lockfile = "//rust:Cargo.lock",

@@ -919,16 +919,16 @@
         }
       }
     },
-    "@@rules_rust+//crate_universe:extensions.bzl%crate": {
+    "@@rules_rust+//crate_universe:extensions.bzl%crate%<root>+crate": {
       "general": {
         "bzlTransitiveDigest": "r2A95SmJhS2rIQw2sdLDi1N35RppjyyJ14+DCSDlDsI=",
-        "usagesDigest": "W4OCJsHNs2SAP7xoZo8C+joINFJr13DmJfXO88/FVL8=",
+        "usagesDigest": "f8ZoMIHJf92TfKWpdCp3M+L/s5zCNxYn5ybOXx16D0w=",
         "recordedInputs": [
           "ENV:CARGO_BAZEL_DEBUG \\0",
           "ENV:CARGO_BAZEL_GENERATOR_SHA256 \\0",
           "ENV:CARGO_BAZEL_GENERATOR_URL \\0",
           "ENV:CARGO_BAZEL_ISOLATED \\0",
-          "ENV:CARGO_BAZEL_REPIN \\0",
+          "ENV:CARGO_BAZEL_REPIN 1",
           "ENV:CARGO_BAZEL_REPIN_ONLY \\0",
           "ENV:CARGO_BAZEL_TIMEOUT \\0",
           "ENV:REPIN \\0",
