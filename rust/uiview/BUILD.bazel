@@ -7,21 +7,20 @@ package(default_visibility = ["//visibility:public"])
 # Cargo.toml exposed for crate_universe to read manifests.
 exports_files(["Cargo.toml"])
 
-# Rust types generated from //proto:uiview_proto via prost. Consumes
-# the Bazel proto graph, so @googleapis provides field_behavior
-# natively — no vendored copies needed.
+# Rust types for meridian.ui.v1 via prost, generated from the meridian-schemas
+# proto_library (the cross-repo Bazel contract). No serde transform: the wasm
+# boundary uses protobuf BINARY (prost decode), not serde_wasm_bindgen JSON, so
+# the prost types need no serde derives and meridian-schemas stays rust-free.
 rust_prost_library(
     name = "uiview_proto",
-    proto = "//proto:uiview_proto",
+    proto = "@meridian_schemas//proto:uiview_proto",
 )
 
-# Rust types for meridian.theme.v1 via prost. A SEPARATE prost crate from
-# uiview_proto (semantics ⊥ style), consumed by the TUI's theme binding
-# (//rust/tui:theme -> ratatui Style palette). No serde transform: the TUI
-# decodes a Theme binpb, it doesn't round-trip JSON across a wasm boundary.
+# meridian.theme.v1 types via prost. SEPARATE crate (semantics ⊥ style),
+# consumed by the TUI's theme binding (-> ratatui Style palette).
 rust_prost_library(
     name = "theme_proto",
-    proto = "//proto:theme_proto",
+    proto = "@meridian_schemas//proto:theme_proto",
 )
 
 rust_library(
@@ -52,6 +51,10 @@ rust_library(
 rust_test(
     name = "uiview_test",
     crate = ":uiview",
+    # Inherit the bazel_proto path explicitly: rust_test doesn't always carry the
+    # wrapped crate's crate_features, and without it lib.rs falls back to the
+    # cargo build.rs/OUT_DIR codegen path (unset under Bazel).
+    crate_features = ["bazel_proto"],
     edition = "2021",
 )
 

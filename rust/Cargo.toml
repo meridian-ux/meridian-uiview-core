@@ -1,26 +1,19 @@
-# Cargo workspace for Meridian's Rust UI surface. The authoritative
-# build is Bazel — this Cargo.toml exists so crate_universe can read
-# manifests and so rust-analyzer / standalone cargo invocations still
-# work for local iteration.
+# Cargo workspace for meridian-uiview-core. The authoritative build is Bazel —
+# this Cargo.toml exists so crate_universe can read manifests and so
+# rust-analyzer / standalone cargo invocations still work for local iteration.
 #
-# Layout:
-#   uiview/         — platform-neutral core. Prost-generated proto
-#                     types for meridian.ui.v1, ProtoPaths field
-#                     accessor, RequestBuilder, scoring helpers.
-#                     wasm-bindgen wrappers (consumed by the TS web
-#                     renderer) are gated on
-#                     `#[cfg(target_arch = "wasm32")]`.
-#   tui/            — ratatui-based renderer. Consumes `uiview` as a
-#                     pure Rust dep; no wasm boundary.
-#   tui-demo/       — example binary mounting a hardcoded
-#                     PanelDescriptor with mocked data. Shows the
-#                     framework rendering end-to-end in a terminal.
+#   uiview/  — platform-neutral core. Prost types for meridian.ui.v1 +
+#              meridian.theme.v1, ProtoPaths accessor, RequestBuilder, render/
+#              scoring helpers. wasm-bindgen wrappers (consumed by meridian-web)
+#              are gated on the wasm target.
+#
+# The renderers live in their own modules (meridian-web uses the wasm bundle,
+# meridian-tui uses the native lib); they depend on this module.
 #
 # Build (Bazel — hermetic):
-#   bazel build //rust/...
-#   bazel test  //rust/...
-#   bazel run   //rust/tui-demo:tui-demo
-#   bazel build //rust/uiview:uiview_wasm     # wasm bundle for web
+#   bazel build //rust/uiview:uiview            # native rust lib
+#   bazel build //rust/uiview:uiview_wasm       # wasm bundle for the web renderer
+#   bazel test  //rust/uiview:uiview_test
 #
 # Repin the crate-universe lockfile after touching this file:
 #   CARGO_BAZEL_REPIN=1 bazel build //rust/...
@@ -28,35 +21,24 @@
 resolver = "2"
 members = [
     "uiview",
-    "tui",
-    "tui-demo",
-    "egui-demo",
 ]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/mattmarshall/meridian"
+repository = "https://github.com/meridian-ux/meridian-uiview-core"
 
 [workspace.dependencies]
 prost = "0.13"
 prost-build = "0.13"
 prost-types = "0.13"
-ratatui = "0.29"
-crossterm = "0.28"
-# egui-demo: a native (egui) renderer foil reusing the uiview core (see
-# rust/egui-demo). Mirrors tui-demo but with an immediate-mode GUI window.
-egui = "0.28"
-eframe = "0.28"
-regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-# wasm-bindgen + js-sys + serde-wasm-bindgen. The wasm-bindgen
-# version must match the wasm-bindgen-cli baked into
-# rules_rust_wasm_bindgen's default toolchain (0.2.105) — otherwise
-# the IR schema versions diverge and post-processing fails.
+# wasm-bindgen + js-sys + serde-wasm-bindgen. The wasm-bindgen version must match
+# the wasm-bindgen-cli baked into rules_rust_wasm_bindgen's default toolchain
+# (0.2.105) — otherwise the IR schema versions diverge and post-processing fails.
 wasm-bindgen = "=0.2.105"
 js-sys = "0.3"
 serde-wasm-bindgen = "0.6"

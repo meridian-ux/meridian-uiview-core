@@ -1,11 +1,15 @@
 common --enable_bzlmod
+
+# Use the toolchain-resolved (prebuilt) protoc rather than compiling it from
+# source — the CLT-only dev host can't build protoc, and CI shouldn't have to.
 common --incompatible_enable_proto_toolchain_resolution
 common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
 
-common --registry=https://raw.githubusercontent.com/fastverk/bazel-registry/main/
+# meridian_schemas resolves from the public tomato-bazel registry; rules_rust,
+# protobuf, googleapis, etc. from BCR.
+common --registry=https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/
 common --registry=https://bcr.bazel.build
 
-build --java_runtime_version=remotejdk_17
 build --announce_rc
 build --keep_going
 test --test_output=errors
