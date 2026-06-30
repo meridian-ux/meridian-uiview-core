@@ -47,7 +47,9 @@ mod request;
 mod render;
 
 pub use paths::ProtoPaths;
-pub use render::{format_cell, format_value, render_table, RenderedRow};
+pub use render::{
+    format_cell, format_value, render_gallery, render_table, RenderedCard, RenderedRow,
+};
 pub use request::{Context, RequestBuilder};
 
 // Re-export the prost crate so downstream consumers can decode our

@@ -13,8 +13,8 @@
 // request outputs also flow as JSON.
 
 use crate::paths::ProtoPaths;
-use crate::proto::{PanelBundle, PanelDescriptor, RpcCall, TablePanel};
-use crate::render::render_table;
+use crate::proto::{GalleryPanel, PanelBundle, PanelDescriptor, RpcCall, TablePanel};
+use crate::render::{render_gallery, render_table};
 use crate::request::{Context, RequestBuilder};
 use prost::Message;
 use serde_json::Value;
@@ -103,10 +103,49 @@ pub fn build_populate_request(
     serde_wasm_bindgen::to_value(&request).map_err(|e| JsError::new(&e.to_string()))
 }
 
+/// Renders a GalleryPanel against a JSON response value. Returns an array of
+/// `{ raw, title, subtitle, icon, status, href, action_label }` — one per row —
+/// which the host drops into card chrome (resolving `icon` to a vector glyph).
+#[wasm_bindgen(js_name = "renderGalleryPanel")]
+pub fn render_gallery_panel_wasm(
+    gallery_panel: JsValue,
+    response: JsValue,
+) -> Result<JsValue, JsError> {
+    let gallery: GalleryPanel = serde_wasm_bindgen::from_value(gallery_panel)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let response_json: Value = serde_wasm_bindgen::from_value(response)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let cards = render_gallery(&response_json, &gallery);
+    let serializable: Vec<RenderedCardJs> = cards
+        .into_iter()
+        .map(|c| RenderedCardJs {
+            raw: c.raw,
+            title: c.title,
+            subtitle: c.subtitle,
+            icon: c.icon,
+            status: c.status,
+            href: c.href,
+            action_label: c.action_label,
+        })
+        .collect();
+    serde_wasm_bindgen::to_value(&serializable).map_err(|e| JsError::new(&e.to_string()))
+}
+
 #[derive(serde::Serialize)]
 struct RenderedRowJs {
     raw: Value,
     cells: Vec<String>,
+}
+
+#[derive(serde::Serialize)]
+struct RenderedCardJs {
+    raw: Value,
+    title: String,
+    subtitle: String,
+    icon: String,
+    status: String,
+    href: String,
+    action_label: String,
 }
 
 #[derive(serde::Deserialize)]

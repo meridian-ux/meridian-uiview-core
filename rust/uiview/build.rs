@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "rpc.proto",
         "form.proto",
         "table.proto",
+        "gallery.proto",
         "lro.proto",
         "prompt.proto",
         "llm_prompt.proto",

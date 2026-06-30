@@ -1,5 +1,5 @@
 use crate::paths::ProtoPaths;
-use crate::proto::{ColumnFormat, TableColumn, TablePanel};
+use crate::proto::{ColumnFormat, GalleryPanel, TableColumn, TablePanel};
 use serde_json::Value;
 
 // One rendered row in the table. Each element of `cells` corresponds
@@ -33,6 +33,48 @@ pub fn render_table(response: &Value, table: &TablePanel) -> Vec<RenderedRow> {
         });
     }
     out
+}
+
+// One rendered card in a gallery. `raw` carries the source JSON object (so
+// click/navigation can resolve against it); the slots are pre-formatted strings
+// the host drops into the card chrome. `icon` is a key the host maps to a glyph.
+pub struct RenderedCard {
+    pub raw: Value,
+    pub title: String,
+    pub subtitle: String,
+    pub icon: String,
+    pub status: String,
+    pub href: String,
+    pub action_label: String,
+}
+
+/// Renders the `rows_field` of a JSON response into a sequence of `RenderedCard`,
+/// mapping each row's fields to card slots per the GalleryPanel's CardSpec.
+pub fn render_gallery(response: &Value, gallery: &GalleryPanel) -> Vec<RenderedCard> {
+    let rows = ProtoPaths::rows(response, &gallery.rows_field);
+    let card = gallery.card.clone().unwrap_or_default();
+    // Read a dotted path as a display string; empty path or null -> "".
+    let slot = |row: &Value, path: &str| -> String {
+        if path.is_empty() {
+            return String::new();
+        }
+        match ProtoPaths::get(row, path) {
+            Value::String(s) => s.clone(),
+            Value::Null => String::new(),
+            v => v.to_string(),
+        }
+    };
+    rows.iter()
+        .map(|row| RenderedCard {
+            title: slot(row, &card.title_field),
+            subtitle: slot(row, &card.subtitle_field),
+            icon: slot(row, &card.icon_field),
+            status: slot(row, &card.status_field),
+            href: slot(row, &card.href_field),
+            action_label: slot(row, &card.action_label_field),
+            raw: (*row).clone(),
+        })
+        .collect()
 }
 
 /// Formats one JSON value per a TableColumn's format directive.
