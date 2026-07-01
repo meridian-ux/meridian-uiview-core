@@ -367,8 +367,8 @@
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/jsoncpp/1.9.5/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/jsoncpp/1.9.6/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/libpfm/4.11.0/MODULE.bazel": "not found",
-    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.1.0/MODULE.bazel": "8f5abb704c474ea1382813af626dd1b937799d05ab09a5713e6b88902e7b9e03",
-    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.1.0/source.json": "95b51f42210eb7ec9d38f12cc549da90d8f51c5330e8240ae934b5b62e349159",
+    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.2.0/MODULE.bazel": "2300a61d0b88cfea91411ef09cf901104e96a21a2758a16e65d9034c5ffbec62",
+    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.2.0/source.json": "b34467cfe74a404fa5a457ebc757d8bba19f7f755464ba6fd20896a876e7ef78",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/nlohmann_json/3.6.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/package_metadata/0.0.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/platforms/0.0.10/MODULE.bazel": "not found",
@@ -922,13 +922,13 @@
     "@@rules_rust+//crate_universe:extensions.bzl%crate%<root>+crate": {
       "general": {
         "bzlTransitiveDigest": "r2A95SmJhS2rIQw2sdLDi1N35RppjyyJ14+DCSDlDsI=",
-        "usagesDigest": "f8ZoMIHJf92TfKWpdCp3M+L/s5zCNxYn5ybOXx16D0w=",
+        "usagesDigest": "Rn5RpIJ+9o+yuy38QtdSddH83ySKZK9DyNatc6SV7as=",
         "recordedInputs": [
           "ENV:CARGO_BAZEL_DEBUG \\0",
           "ENV:CARGO_BAZEL_GENERATOR_SHA256 \\0",
           "ENV:CARGO_BAZEL_GENERATOR_URL \\0",
           "ENV:CARGO_BAZEL_ISOLATED \\0",
-          "ENV:CARGO_BAZEL_REPIN 1",
+          "ENV:CARGO_BAZEL_REPIN \\0",
           "ENV:CARGO_BAZEL_REPIN_ONLY \\0",
           "ENV:CARGO_BAZEL_TIMEOUT \\0",
           "ENV:REPIN \\0",
