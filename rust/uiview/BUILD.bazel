@@ -30,14 +30,12 @@ rust_library(
         "src/paths.rs",
         "src/render.rs",
         "src/request.rs",
+        "src/stat.rs",
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
-    # `bazel_proto` cfg-gates src/lib.rs to pull prost types from
-    # the sibling `:uiview_proto` crate instead of OUT_DIR (the
-    # cargo path). Without this, the build.rs path is selected
-    # and OUT_DIR isn't set under bazel.
-    crate_features = ["bazel_proto"],
+    # src/lib.rs re-exports the `:uiview_proto` rust_prost_library types directly
+    # (the single, Bazel-native codegen path — no cargo/prost-build fallback).
     deps = [
         ":uiview_proto",
         "@crates//:prost",
@@ -51,16 +49,11 @@ rust_library(
 rust_test(
     name = "uiview_test",
     crate = ":uiview",
-    # Inherit the bazel_proto path explicitly: rust_test doesn't always carry the
-    # wrapped crate's crate_features, and without it lib.rs falls back to the
-    # cargo build.rs/OUT_DIR codegen path (unset under Bazel).
-    crate_features = ["bazel_proto"],
     edition = "2021",
 )
 
-# Wasm cdylib variant — same sources as `:uiview` but with the `wasm`
-# crate-feature flag set, which #[cfg]-gates in the wasm_api module
-# and its wasm-bindgen wrappers. Built for wasm32-unknown-unknown via
+# Wasm cdylib variant — same sources as `:uiview`; the wasm_api module is
+# #[cfg(target_arch = "wasm32")]-gated and built for wasm32-unknown-unknown via
 # the transition in rust_wasm_bindgen.
 rust_shared_library(
     name = "uiview_wasm_lib",
@@ -69,11 +62,11 @@ rust_shared_library(
         "src/paths.rs",
         "src/render.rs",
         "src/request.rs",
+        "src/stat.rs",
         "src/wasm_api.rs",
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
-    crate_features = ["bazel_proto"],
     deps = [
         ":uiview_proto",
         "@crates//:js-sys",

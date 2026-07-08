@@ -168,6 +168,7 @@ mod tests {
                 },
             ],
             actions: vec![],
+            pagination: None,
         };
         let rendered = render_table(&response, &table);
         assert_eq!(rendered.len(), 2);

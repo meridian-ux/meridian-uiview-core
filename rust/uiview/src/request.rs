@@ -19,6 +19,11 @@ pub struct Context {
     pub selected_row: Option<Value>,
     /// Form field values keyed by field_id.
     pub form_values: HashMap<String, Value>,
+    /// Live GRAMMAR/PANEL signal values keyed by name (a Vega selection's
+    /// current value, read via the renderGrammar handle's getSignal). Populated
+    /// by the host before firing a `signal`-bound RpcCall; empty on surfaces with
+    /// no live signals (static / degraded renders), so those bindings are inert.
+    pub signals: HashMap<String, Value>,
 }
 
 /// Assembles a JSON request from an RpcCall's FieldBindings + runtime
@@ -57,6 +62,10 @@ impl RequestBuilder {
                 .unwrap_or(Value::Null),
             Some(Source::Literal(s)) => Value::String(s.clone()),
             Some(Source::Nested(nested)) => Self::build_nested(nested, ctx),
+            // A live grammar/panel signal (a Vega selection). Resolves from
+            // ctx.signals like form_field resolves from form_values; absent on
+            // static/degraded surfaces → Null → the field is skipped (inert).
+            Some(Source::Signal(name)) => ctx.signals.get(name).cloned().unwrap_or(Value::Null),
             None => return,
         };
         if value.is_null() {
