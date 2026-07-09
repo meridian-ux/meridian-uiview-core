@@ -157,6 +157,9 @@ impl ContextJs {
             ui_identity: self.ui_identity,
             selected_row: self.selected_row,
             form_values: self.form_values.unwrap_or_default(),
+            // Live Vega/panel signals are set by the JS host via the renderGrammar
+            // handle, not passed through this construction context — start empty.
+            signals: Default::default(),
         }
     }
 }
