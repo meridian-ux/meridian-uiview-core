@@ -26,6 +26,8 @@ rust_prost_library(
 rust_library(
     name = "uiview",
     srcs = [
+        "src/conversation.rs",
+        "src/launchpad.rs",
         "src/lib.rs",
         "src/paths.rs",
         "src/render.rs",
@@ -58,6 +60,8 @@ rust_test(
 rust_shared_library(
     name = "uiview_wasm_lib",
     srcs = [
+        "src/conversation.rs",
+        "src/launchpad.rs",
         "src/lib.rs",
         "src/paths.rs",
         "src/render.rs",
