@@ -148,6 +148,9 @@ struct ContextJs {
     selected_row: Option<Value>,
     #[serde(rename = "formValues")]
     form_values: Option<HashMap<String, Value>>,
+    /// The view's selection bag, keyed by selection key. Optional: a host with
+    /// no scope pickers omits it and every `selection_key` binding is inert.
+    selections: Option<HashMap<String, Value>>,
 }
 
 impl ContextJs {
@@ -160,6 +163,9 @@ impl ContextJs {
             // Live Vega/panel signals are set by the JS host via the renderGrammar
             // handle, not passed through this construction context — start empty.
             signals: Default::default(),
+            // View-level selection scope, unlike signals, IS a property of the
+            // render context, so it crosses here.
+            selections: self.selections.unwrap_or_default(),
         }
     }
 }
