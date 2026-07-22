@@ -367,8 +367,8 @@
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/jsoncpp/1.9.5/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/jsoncpp/1.9.6/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/libpfm/4.11.0/MODULE.bazel": "not found",
-    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.12.0/MODULE.bazel": "6dfbb73bbed50804e760b2b56ff001a81ff7b4428e1fe8094237628c7a59d7ed",
-    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.12.0/source.json": "b2f4b16878f7391513c421b1b46c20ccbdd8a3dc45662c861efe601e93d93c88",
+    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.18.0/MODULE.bazel": "b31e2023ac574363467292538a86b134d0f3f541604038e3ff6a1c42130ebbf8",
+    "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/meridian_schemas/0.18.0/source.json": "b2281d94316a0381cde58d9ac1b680cbe486ccacb60948b22232007cd8c5f6ba",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/nlohmann_json/3.6.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/package_metadata/0.0.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/tomato-bazel/bazel-registry/main/modules/platforms/0.0.10/MODULE.bazel": "not found",
@@ -922,7 +922,7 @@
     "@@rules_rust+//crate_universe:extensions.bzl%crate%<root>+crate": {
       "general": {
         "bzlTransitiveDigest": "r2A95SmJhS2rIQw2sdLDi1N35RppjyyJ14+DCSDlDsI=",
-        "usagesDigest": "OyT7NWFeiQdV/ob+hk33+IIhwiVmmG7Ri4l8IJeFlqA=",
+        "usagesDigest": "rOIp9qTN7MukjnwMXaTKNVty4sTE6xMTTWV3MN2NBYs=",
         "recordedInputs": [
           "ENV:CARGO_BAZEL_DEBUG \\0",
           "ENV:CARGO_BAZEL_GENERATOR_SHA256 \\0",

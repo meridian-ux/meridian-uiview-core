@@ -24,6 +24,14 @@ pub struct Context {
     /// by the host before firing a `signal`-bound RpcCall; empty on surfaces with
     /// no live signals (static / degraded renders), so those bindings are inert.
     pub signals: HashMap<String, Value>,
+    /// The view's SELECTION BAG: values published by a sibling panel's scope
+    /// picker ("which plan year is this page about?"), keyed by selection key.
+    /// Distinct from `signals` (a grammar's own live selection) — this is
+    /// view-level scope shared ACROSS panels. An unset key resolves to Null,
+    /// which `apply_binding` omits from the request entirely; per rpc.proto that
+    /// is required, not incidental — an unset scope must never silently widen
+    /// the query by being sent empty.
+    pub selections: HashMap<String, Value>,
 }
 
 /// Assembles a JSON request from an RpcCall's FieldBindings + runtime
@@ -66,6 +74,13 @@ impl RequestBuilder {
             // ctx.signals like form_field resolves from form_values; absent on
             // static/degraded surfaces → Null → the field is skipped (inert).
             Some(Source::Signal(name)) => ctx.signals.get(name).cloned().unwrap_or(Value::Null),
+            // A view SELECTION key (a sibling scope picker's current value).
+            // Resolves from ctx.selections; UNSET → Null → omitted below, which
+            // rpc.proto requires: an unset scope must not be sent as empty and
+            // silently widen the query.
+            Some(Source::SelectionKey(key)) => {
+                ctx.selections.get(key).cloned().unwrap_or(Value::Null)
+            }
             None => return,
         };
         if value.is_null() {
@@ -117,6 +132,36 @@ impl RequestBuilder {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    // A SET selection key resolves like any other source; an UNSET one OMITS the
+    // field. The omission is the load-bearing half: rpc.proto specifies that an
+    // unset scope must never be sent empty, because an empty scope silently
+    // WIDENS the query (every plan year instead of one) rather than failing.
+    #[test]
+    fn a_selection_key_resolves_when_set_and_is_omitted_when_not() {
+        let call = RpcCall {
+            service: "acme.Plans".into(),
+            method: "ListPlans".into(),
+            bindings: vec![
+                fb("plan_year", Source::SelectionKey("plan_year".into())),
+                fb("tenant", Source::Literal("acme".into())),
+            ],
+        };
+
+        let mut ctx = Context::default();
+        ctx.selections
+            .insert("plan_year".into(), json!(2026));
+        assert_eq!(
+            RequestBuilder::build(&call, &ctx),
+            json!({ "plan_year": 2026, "tenant": "acme" }),
+        );
+
+        // Unset ⇒ the field is absent entirely, NOT null and NOT "".
+        let empty = Context::default();
+        let built = RequestBuilder::build(&call, &empty);
+        assert_eq!(built, json!({ "tenant": "acme" }));
+        assert!(built.get("plan_year").is_none());
+    }
 
     fn fb(request_field: &str, source: Source) -> FieldBinding {
         FieldBinding {
