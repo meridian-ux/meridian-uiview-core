@@ -22,6 +22,34 @@ use serde_json::Value;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
+/// Serialize a Rust value for JS as PLAIN OBJECTS, not `Map`s.
+///
+/// serde-wasm-bindgen's DEFAULT turns a `serde_json::Value::Object` — and any
+/// Rust map — into a JS `Map`. That is the correct default for a lossless
+/// round-trip (a Map can key on non-strings), but it is the WRONG one for this
+/// surface, which is a JSON-shaped API consumed by ordinary JavaScript. The
+/// difference is invisible until it isn't:
+///
+///     raw.name                                  → undefined  (needs raw.get)
+///     JSON.stringify(new Map([["name","x"]]))   → "{}"
+///     Object.entries(new Map([["name","x"]]))   → []
+///
+/// Both failures shipped. The TS `UiviewWasm` interface declares
+/// `raw: Record<string, unknown>` and `buildRequest(): object`; TypeScript
+/// cannot check across an FFI boundary, so those declarations were simply
+/// false. Every binding-populated request serialized to nothing — a bound GET
+/// sent no query params, a bound POST an empty body — with no error anywhere.
+///
+/// So: one serializer, used by EVERY js-facing return, that makes the declared
+/// types true.
+fn to_js<T: serde::Serialize + ?Sized>(value: &T) -> Result<JsValue, JsError> {
+    // `Serializer` is cheap to construct; there is no shared-state win in
+    // caching it, and a fresh one keeps this free of statics.
+    value
+        .serialize(&serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true))
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
 /// Reads a field from a JSON-shaped object by dotted path. Mirrors
 /// meridian.ui.descriptors.ProtoPaths.get. Used by the web renderer
 /// to extract column cell values from response objects.
@@ -30,7 +58,7 @@ pub fn read_path(value: JsValue, path: &str) -> Result<JsValue, JsError> {
     let json: Value =
         serde_wasm_bindgen::from_value(value).map_err(|e| JsError::new(&e.to_string()))?;
     let result = ProtoPaths::get(&json, path).clone();
-    serde_wasm_bindgen::to_value(&result).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&result)
 }
 
 /// Renders a TablePanel against a JSON response value.
@@ -59,7 +87,7 @@ pub fn render_table_wasm(descriptor: &[u8], response: JsValue) -> Result<JsValue
             cells: r.cells,
         })
         .collect();
-    serde_wasm_bindgen::to_value(&serializable).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&serializable)
 }
 
 /// Builds the JSON request object for a TablePanel's populate RPC.
@@ -90,7 +118,7 @@ pub fn build_populate_request(
     let ctx_in: ContextJs =
         serde_wasm_bindgen::from_value(context_value).map_err(|e| JsError::new(&e.to_string()))?;
     let request = RequestBuilder::build(&populate, &ctx_in.into_context());
-    serde_wasm_bindgen::to_value(&request).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&request)
 }
 
 /// Renders a GalleryPanel against a JSON response value. `gallery_panel` is a
@@ -118,7 +146,7 @@ pub fn render_gallery_panel_wasm(
             action_label: c.action_label,
         })
         .collect();
-    serde_wasm_bindgen::to_value(&serializable).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&serializable)
 }
 
 #[derive(serde::Serialize)]
@@ -188,7 +216,7 @@ pub fn build_request_wasm(rpc_call: &[u8], context_value: JsValue) -> Result<JsV
     let ctx_in: ContextJs =
         serde_wasm_bindgen::from_value(context_value).map_err(|e| JsError::new(&e.to_string()))?;
     let request = RequestBuilder::build(&call, &ctx_in.into_context());
-    serde_wasm_bindgen::to_value(&request).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&request)
 }
 
 /// Renders any TablePanel against any JSON response value. The existing
@@ -208,7 +236,7 @@ pub fn render_table_panel_wasm(table_panel: &[u8], response: JsValue) -> Result<
             cells: r.cells,
         })
         .collect();
-    serde_wasm_bindgen::to_value(&serializable).map_err(|e| JsError::new(&e.to_string()))
+    to_js(&serializable)
 }
 
 /// Convention-based LRO metadata formatter. Mirrors JavaFX's
