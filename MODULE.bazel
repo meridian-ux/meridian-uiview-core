@@ -1,6 +1,6 @@
 module(
     name = "meridian_uiview_core",
-    version = "0.5.0",
+    version = "0.6.0",
 )
 
 # meridian-uiview-core — the shared, platform-neutral Rust core of the meridian
