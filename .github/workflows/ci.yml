@@ -1,0 +1,59 @@
+name: ci
+
+# meridian-uiview-core had NO CI. Nothing gated a merge here — not a test, not a
+# build — despite this being the shared Rust core that meridian-tui and
+# meridian-web both consume, and a Bazel module two other repos depend on. 1,911
+# lines with no gate.
+#
+# It was not laziness: until now the crate could only be built by Bazel, which
+# needs a private module registry and a credential setup, so "add CI" meant "wire
+# up Bazel in CI" and that never happened. The cargo codegen path (build.rs +
+# the committed descriptor set) removes that excuse — the crate now builds with
+# nothing but a Rust toolchain. No protoc, no registry, no auth: `compile_fds`
+# reads bytes rather than shelling out.
+#
+# This deliberately does NOT run Bazel. That belongs in a separate job once the
+# registry credentials are sorted; a fast, dependency-free gate that actually
+# runs beats a thorough one that does not.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  cargo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      # 27 unit tests over the proto-walking / request-building / stat core,
+      # plus 3 guards on the committed descriptor set the build generates from.
+      - name: cargo test
+        working-directory: rust
+        run: cargo test --workspace --all-targets
+
+      # ⛔ NOT YET GATED: `cargo fmt --check` and
+      # `cargo clippy --all-targets -- -D warnings` both FAIL on this crate today
+      # — formatting drift across conversation.rs / launchpad.rs and four
+      # clippy findings (field_reassign_with_default and friends), all in test
+      # code, all pre-existing. That is what a crate with no CI looks like.
+      #
+      # They are deliberately left out rather than added red. A gate that fails
+      # on the commit that introduces it teaches everyone to ignore the gate, and
+      # this estate has already paid for that lesson once — see meridian-mui-kit's
+      # ui.yml: "THIS STEP DID NOT EXIST, and tests/ HAS NEVER GATED A MERGE."
+      #
+      # Follow-up: one commit that runs `cargo fmt --all`, fixes the four clippy
+      # findings, and turns both steps on. Kept separate so the formatting churn
+      # does not bury a behaviour change in review.

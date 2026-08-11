@@ -22,9 +22,14 @@ wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
 
-# No [build-dependencies]/[features]: proto codegen is Bazel-native via
-# rust_prost_library (//rust/uiview:uiview_proto). The `uiview_proto` crate is a
-# normal Bazel dep — there is no cargo/prost-build fallback.
+# Proto codegen has TWO paths (see src/lib.rs):
+#   Bazel -> --cfg=bazel_proto + the rust_prost_library //rust/uiview:uiview_proto
+#   cargo -> build.rs + prost-build over the committed descriptor set
+# The cargo path needs no protoc: prost-build's compile_fds reads bytes.
+[build-dependencies]
+prost-build = { workspace = true }
+prost-types = { workspace = true }
+prost = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

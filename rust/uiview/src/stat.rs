@@ -211,13 +211,10 @@ mod tests {
             label: "m".into(),
             value,
             format,
-            unit: String::new(),
-            previous: None,
-            series: vec![],
-            delta_override: None,
-            trend_override: 0,
-            higher_is_better: None,
-            caption: String::new(),
+            // See the note in render.rs: additive schema growth (populate /
+            // previous_field / display_field landed after 0.18.0) should not
+            // break a fixture that cares about three fields.
+            ..Default::default()
         }
     }
 

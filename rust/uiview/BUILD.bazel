@@ -36,8 +36,10 @@ rust_library(
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
-    # src/lib.rs re-exports the `:uiview_proto` rust_prost_library types directly
-    # (the single, Bazel-native codegen path — no cargo/prost-build fallback).
+    # Selects the Bazel codegen path in src/lib.rs: the `:uiview_proto`
+    # rust_prost_library, rather than build.rs + the committed descriptor set
+    # that the cargo path uses. Bazel never runs build.rs.
+    rustc_flags = ["--cfg=bazel_proto"],
     deps = [
         ":uiview_proto",
         "@crates//:prost",
@@ -71,6 +73,11 @@ rust_shared_library(
     ],
     crate_name = "meridian_uiview",
     edition = "2021",
+    # Same cfg as `:uiview` — this target compiles the sources independently, so
+    # it does not inherit the library's flags. Without it the wasm build would
+    # take src/lib.rs's cargo branch and look for an OUT_DIR that Bazel never
+    # writes.
+    rustc_flags = ["--cfg=bazel_proto"],
     deps = [
         ":uiview_proto",
         "@crates//:js-sys",
