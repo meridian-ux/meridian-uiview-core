@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-# Regenerate rust/uiview/proto/gen/meridian_ui_v1.binpb — the cargo build's input.
+# Regenerate BOTH committed descriptor sets — the cargo build's inputs:
+#
+#   rust/uiview/proto/gen/meridian_ui_v1.binpb        <- //proto:uiview_proto
+#   rust/theme-proto/proto/gen/meridian_theme_v1.binpb <- //proto:theme_proto
+#
+# Two sets, not one, because Bazel already makes them two crates: `uiview_proto`
+# and `theme_proto` are separate rust_prost_library targets, and meridian-tui
+# names `theme_proto` by that exact path. Folding theme into the ui set would
+# make the cargo and Bazel module paths differ, which is the one thing the
+# dual-build idiom exists to prevent. It is also the honest boundary — semantics
+# and style are orthogonal, which is why they were split upstream.
 #
 # WHY A COMMITTED SET. Bazel gets its types from
 # `@meridian_schemas//proto:uiview_proto` through rust_prost_library. cargo has no
@@ -24,6 +34,7 @@ set -euo pipefail
 SCHEMAS="${1:-../meridian-schemas}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$HERE/rust/uiview/proto/gen/meridian_ui_v1.binpb"
+THEME_OUT="$HERE/rust/theme-proto/proto/gen/meridian_theme_v1.binpb"
 
 [ -d "$SCHEMAS/proto" ] || { echo "no proto/ under $SCHEMAS — pass the meridian-schemas checkout as \$1" >&2; exit 1; }
 
@@ -47,7 +58,15 @@ curl -fsSL -o "$GAPI/google/api/field_behavior.proto" \
 
 mkdir -p "$(dirname "$OUT")"
 ( cd "$SCHEMAS" && protoc --include_imports --descriptor_set_out="$OUT" -I . -I "$GAPI" $SRCS )
+
+# theme.proto is its own proto_library and its own crate. It imports nothing
+# today, so no -I "$GAPI" is needed — but --include_imports stays, because the
+# guard in rust/theme-proto/tests/contract.rs asserts self-containment and an
+# import added upstream should widen the set rather than break codegen.
+( cd "$SCHEMAS" && protoc --include_imports --descriptor_set_out="$THEME_OUT" -I . -I "$GAPI" proto/theme.proto )
+
 rm -rf "$GAPI"
 
 echo "wrote $OUT ($(stat -c%s "$OUT") bytes) from $(echo "$SRCS" | wc -w) protos"
-echo "Now run: (cd rust && cargo test -p meridian-uiview)"
+echo "wrote $THEME_OUT ($(stat -c%s "$THEME_OUT") bytes) from proto/theme.proto"
+echo "Now run: (cd rust && cargo test --workspace --all-targets)"
