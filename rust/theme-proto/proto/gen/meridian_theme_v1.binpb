@@ -1,0 +1,53 @@
+
+Î	
+proto/theme.protomeridian.theme.v1"‘
+Theme
+id (	Rid!
+display_name (	RdisplayName0
+light (2.meridian.theme.v1.PaletteRlight.
+dark (2.meridian.theme.v1.PaletteRdark=
+
+typography (2.meridian.theme.v1.TypographyR
+typography4
+metrics (2.meridian.theme.v1.MetricsRmetrics"Ý
+Palette
+bg (	Rbg
+surface (	Rsurface
+fg (	Rfg
+muted (	Rmuted
+border (	Rborder
+accent (	Raccent#
+accent_strong (	RaccentStrong
+	on_accent (	RonAccent
+danger	 (	Rdanger
+success
+ (	Rsuccess
+code_bg (	RcodeBg
+code_fg (	RcodeFg
+warning (	Rwarning
+info (	Rinfo"˜
+
+Typography
+sans (	Rsans
+mono (	Rmono 
+base_size_px (R
+baseSizePx%
+heading_weight (RheadingWeight
+body_weight (R
+bodyWeight)
+heading_tracking (	RheadingTracking
+display (	Rdisplay3
+fonts (2.meridian.theme.v1.FontSourceRfonts"ª
+
+FontSource
+family (	Rfamily
+src_uri (	RsrcUri
+weight (	Rweight
+style (	Rstyle#
+unicode_range (	RunicodeRange
+display (	Rdisplay"?
+Metrics
+	radius_px (RradiusPx
+unit_px (RunitPxB!
+meridian.theme.v1B
+ThemeProtoPbproto3

@@ -37,8 +37,13 @@ jobs:
         with:
           workspaces: rust
 
-      # 27 unit tests over the proto-walking / request-building / stat core,
-      # plus 3 guards on the committed descriptor set the build generates from.
+      # 33 tests: 27 over the proto-walking / request-building / stat core, 3
+      # guards on the committed meridian.ui.v1 descriptor set, and 3 on the
+      # theme-proto crate — the last of which assert the module path
+      # `theme_proto::meridian::theme::v1::*` resolves, because that is the exact
+      # `use` meridian-tui writes against the Bazel rust_prost_library. A cargo
+      # path that produced the same TYPES under a different PATH would compile
+      # here and break there.
       - name: cargo test
         working-directory: rust
         run: cargo test --workspace --all-targets

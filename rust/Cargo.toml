@@ -17,10 +17,15 @@
 #
 # Repin the crate-universe lockfile after touching this file:
 #   CARGO_BAZEL_REPIN=1 bazel build //rust/...
+#   theme-proto/ — prost types for meridian.theme.v1, as the crate `theme_proto`.
+#              The cargo counterpart of //rust/uiview:theme_proto; style, kept
+#              separate from semantics, and separate because Bazel already makes
+#              it a separate crate that meridian-tui names by that exact path.
 [workspace]
 resolver = "2"
 members = [
     "uiview",
+    "theme-proto",
 ]
 
 [workspace.package]

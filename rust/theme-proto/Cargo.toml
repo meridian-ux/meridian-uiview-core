@@ -1,0 +1,31 @@
+[package]
+name = "theme-proto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "prost types for meridian.theme.v1 — the cargo half of the theme_proto rust_prost_library."
+
+# The crate name matters. Under Bazel these types come from
+# `rust_prost_library(name = "theme_proto")`, and consumers write
+# `pub use theme_proto::meridian::theme::v1::*`. cargo turns `theme-proto` into
+# the lib name `theme_proto`, so the SAME `use` statement resolves under both
+# build systems and no consumer needs a cfg.
+
+[dependencies]
+prost = { workspace = true }
+
+# Codegen has TWO paths, exactly as //rust/uiview does:
+#   Bazel -> the rust_prost_library at //rust/uiview:theme_proto (this crate is
+#            not built at all; Bazel remains the authority over @meridian_schemas)
+#   cargo -> build.rs + prost-build over the committed descriptor set
+# No protoc needed: compile_fds reads bytes rather than shelling out.
+[build-dependencies]
+prost-build = { workspace = true }
+prost-types = { workspace = true }
+prost = { workspace = true }
+
+# Only the descriptor-set guard needs to decode a FileDescriptorSet; the crate
+# itself does not, so prost-types stays out of [dependencies] and off every
+# consumer's graph.
+[dev-dependencies]
+prost-types = { workspace = true }
