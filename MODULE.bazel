@@ -14,7 +14,7 @@ module(
 
 # The proto contracts. rust_prost_library here consumes @meridian_schemas's
 # proto_library targets (the cross-repo Bazel surface).
-bazel_dep(name = "meridian_schemas", version = "0.18.0")
+bazel_dep(name = "meridian_schemas", version = "0.24.0")
 
 # Proto toolchain (protoc via prebuilt; see .bazelrc prefer_prebuilt_protoc).
 bazel_dep(name = "rules_proto", version = "7.1.0")

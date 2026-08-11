@@ -158,15 +158,17 @@ mod tests {
                     header: "confidence".into(),
                     field_path: "confidence".into(),
                     format: ColumnFormat::Float2dp as i32,
-                    pref_width: 0,
-                    link: None,
+                    // `..Default::default()` rather than an exhaustive list: the
+                    // schema grows additively (value_display arrived in 0.22.0),
+                    // and a fixture that enumerates every field breaks on each
+                    // new one while testing nothing about it.
+                    ..Default::default()
                 },
                 TableColumn {
                     header: "claim".into(),
                     field_path: "text".into(),
                     format: ColumnFormat::String as i32,
-                    pref_width: 0,
-                    link: None,
+                    ..Default::default()
                 },
             ],
             actions: vec![],
